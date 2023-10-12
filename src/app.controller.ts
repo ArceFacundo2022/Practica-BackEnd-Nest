@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -6,12 +6,12 @@ export class AppController {
 
   private products: {id: number; name: string; precio: number; stock: number} [] = [{
     id: 1,
-    name: "Ravioles",
-    precio: 500,
+    name: "Papas Fritas",
+    precio: 350,
     stock: 4
   },{
     id: 2,
-    name: "Ñoquis",
+    name: "Azucar",
     precio: 500,
     stock: 6
   },{
@@ -28,19 +28,36 @@ export class AppController {
   }
 
   @Get(`/Product/:id`)
-  getProduct(@Param('id') id : number): any {
-    let product = ""
+  getProductId(@Param('id') id : number): any {
+    let resp = ""
     this.products.map((prod)=>{
       if(prod.id == id){
-         product = prod.name
+        resp = prod.name
       }
     });
-    return product
+    return resp
+  }
+
+  @Get(`/Product`)
+  getProduct():any{
+    return this.products
   }
 
   @Post(`/Product`)
   postProduct(@Body() datos: any): any {
-    return this.products.push(datos)
+
+    let resp = false
+    this.products.map((prod)=> {
+      if(prod.id == datos.id || prod.name == datos.name){
+        prod.stock += datos.stock
+        resp = true
+      }
+      return prod
+    })
+    if(!resp){
+      this.products.push(datos)
+    }
+    return this.products
   }
 
   @Put(`/Product`)
@@ -53,5 +70,32 @@ export class AppController {
     })
     this.products = newProductos
     return this.products
+  }
+
+  @Delete(`/ProductSubtract/:id`)
+  sustraerProduct(@Param('id') id : number): any{
+    let resp = ""
+    this.products.map((prod)=>{
+      if(prod.id == id){
+        if(prod.stock > 0){
+          resp = `Hay ${prod.stock --} ${prod.name} en el almacenamiento`
+        }else{
+          resp = `No hay mas ${prod.name} en el alamacenamiento para sustraer`
+        }
+      }
+    });
+    return resp 
+  }
+
+  @Delete(`/Product/:id`)
+  deleteProduct(@Param('id') id : number): any{
+    let resp = this.products.map((prod, index)=>{
+        if(prod.id == id){
+          this.products.splice(index,1)
+        }else{
+          return prod
+        }
+      });
+    return resp 
   }
 }
